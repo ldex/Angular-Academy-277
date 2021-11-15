@@ -12,7 +12,7 @@ export class ProductService {
   private baseUrl = 'https://storerestservice.azurewebsites.net/api/products/';
   products$: Observable<Product[]>;
 
-  constructor(private http: HttpClient) { 
+  constructor(private http: HttpClient) {
     this.initProducts();
   }
 
@@ -34,6 +34,6 @@ export class ProductService {
   }
 
   deleteProduct(id: number): Observable<any> {
-    return this.http.delete(this.baseUrl + id);           
+    return this.http.delete(this.baseUrl + id);
   }
 }
