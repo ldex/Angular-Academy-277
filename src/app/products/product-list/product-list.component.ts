@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { Observable, EMPTY, combineLatest, Subscription } from 'rxjs';
@@ -24,6 +24,9 @@ export class ProductListComponent implements OnInit {
   filteredProductsNumber$: Observable<number>;
   filtered$: Observable<boolean>;
   errorMessage;
+  subscription: Subscription;
+
+  favouriteProduct$: Observable<Product>;
 
   filter: FormControl = new FormControl("");
 
@@ -32,6 +35,12 @@ export class ProductListComponent implements OnInit {
   start = 0;
   end = this.pageSize;
   currentPage = 1;
+
+  firstPage() {
+    this.start = 0;
+    this.end = this.pageSize;
+    this.currentPage = 1;
+  }
 
   previousPage() {
     this.start -= this.pageSize;
@@ -60,9 +69,21 @@ export class ProductListComponent implements OnInit {
     private productService: ProductService,
     private favouriteService: FavouriteService,
     private router: Router) {
+     // this.subscription = new Subscription();
   }
 
+  // ngOnDestroy(): void {
+  //   this.subscription.unsubscribe();
+  // }
+
   ngOnInit(): void {
+      this.favouriteProduct$ = this
+                                  .favouriteService
+                                  .favouriteAdded$
+                                  .pipe(
+                                    tap(console.log)
+                                  );
+
     // Self url navigation will refresh the page ('Refresh List' button)
     this.router.routeReuseStrategy.shouldReuseRoute = () => false;
 
@@ -83,11 +104,14 @@ export class ProductListComponent implements OnInit {
                       .valueChanges
                       .pipe(
                         map(text => text.trim()),
+                        tap(text => console.log("apres map: " + text)),
                         filter(text => text == "" || text.length > 2),
+                        tap(text => console.log("apres filter: " + text)),
                         debounceTime(500),
                         distinctUntilChanged(),
+                        tap(text => console.log("apres distinctUntilChanged: " + text)),
                         startWith(""),
-                        tap(text => console.warn(text))
+                        tap(text => this.firstPage())
                       );
 
     this.filteredProducts$ = combineLatest([this.products$, this.filter$])
